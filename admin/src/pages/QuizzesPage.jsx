@@ -77,7 +77,7 @@ export default function QuizzesPage() {
         </Typography>
         <Button
           variant="contained"
-          sx={{ bgcolor: '#3949ab' }}
+          sx={{ bgcolor: '#92a8fe' }}
           onClick={() => {
             setForm({
               title: '',

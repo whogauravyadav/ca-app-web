@@ -17,6 +17,7 @@ import ArticleIcon from '@mui/icons-material/Article'
 import QuizIcon from '@mui/icons-material/Quiz'
 import CardMembershipIcon from '@mui/icons-material/CardMembership'
 import PeopleIcon from '@mui/icons-material/People'
+import NotificationsIcon from '@mui/icons-material/Notifications'
 import { useAuth } from '../auth/AuthContext'
 
 const width = 240
@@ -26,6 +27,7 @@ const links = [
   { to: '/categories', label: 'Categories', icon: <CategoryIcon /> },
   { to: '/articles', label: 'Articles', icon: <ArticleIcon /> },
   { to: '/quizzes', label: 'Quizzes', icon: <QuizIcon /> },
+  { to: '/notifications', label: 'Notifications', icon: <NotificationsIcon /> },
   { to: '/plans', label: 'Plans', icon: <CardMembershipIcon /> },
   { to: '/subscribers', label: 'Subscribers', icon: <PeopleIcon /> },
 ]
@@ -35,8 +37,8 @@ export default function AdminLayout() {
   const navigate = useNavigate()
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: '#f4f6fb' }}>
-      <AppBar position="fixed" sx={{ zIndex: (t) => t.zIndex.drawer + 1, bgcolor: '#1a237e' }}>
+    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: '#f4f7ff' }}>
+      <AppBar position="fixed" sx={{ zIndex: (t) => t.zIndex.drawer + 1, bgcolor: '#6b86f0', color: '#fff' }}>
         <Toolbar>
           <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 700 }}>
             Current Affairs Admin
@@ -73,7 +75,7 @@ export default function AdminLayout() {
               sx={{
                 borderRadius: 2,
                 mb: 0.5,
-                '&.active': { bgcolor: 'rgba(57,73,171,0.12)', color: '#3949ab' },
+                '&.active': { bgcolor: 'rgba(146,168,254,0.22)', color: '#6b86f0' },
               }}
             >
               <ListItemIcon sx={{ minWidth: 40, color: 'inherit' }}>{l.icon}</ListItemIcon>

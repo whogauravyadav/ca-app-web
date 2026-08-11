@@ -9,7 +9,7 @@ function Stat({ label, value }) {
         <Typography variant="body2" color="text.secondary">
           {label}
         </Typography>
-        <Typography variant="h4" fontWeight={800} sx={{ mt: 1, color: '#1a237e' }}>
+        <Typography variant="h4" fontWeight={800} sx={{ mt: 1, color: '#6b86f0' }}>
           {value}
         </Typography>
       </CardContent>

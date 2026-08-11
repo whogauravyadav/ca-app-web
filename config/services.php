@@ -35,4 +35,12 @@ return [
         ],
     ],
 
+    'fcm' => [
+        // Legacy server key (Cloud Messaging API Legacy) — easiest to start
+        'server_key' => env('FCM_SERVER_KEY'),
+        // HTTP v1 (preferred): Firebase project + service account JSON path
+        'project_id' => env('FIREBASE_PROJECT_ID'),
+        'credentials' => env('FIREBASE_CREDENTIALS'),
+    ],
+
 ];

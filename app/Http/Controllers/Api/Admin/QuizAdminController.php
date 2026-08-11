@@ -8,6 +8,7 @@ use App\Models\QuizQuestion;
 use App\Models\Subscription;
 use App\Models\SubscriptionPlan;
 use App\Models\User;
+use App\Services\NotificationDispatcher;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -25,7 +26,7 @@ class QuizAdminController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(Request $request, NotificationDispatcher $notifications)
     {
         $data = $request->validate([
             'title' => 'required|string|max:255',
@@ -66,6 +67,10 @@ class QuizAdminController extends Controller
             return $quiz->load('questions');
         });
 
+        if ($quiz->status === 'published') {
+            $notifications->notifyQuizPublished($quiz, $request->user()->id);
+        }
+
         return response()->json(['success' => true, 'data' => $quiz], 201);
     }
 
@@ -77,9 +82,10 @@ class QuizAdminController extends Controller
         ]);
     }
 
-    public function update(Request $request, int $id)
+    public function update(Request $request, int $id, NotificationDispatcher $notifications)
     {
         $quiz = Quiz::findOrFail($id);
+        $wasPublished = $quiz->status === 'published';
         $data = $request->validate([
             'title' => 'sometimes|string|max:255',
             'description' => 'nullable|string',
@@ -116,7 +122,12 @@ class QuizAdminController extends Controller
             }
         });
 
-        return response()->json(['success' => true, 'data' => $quiz->fresh('questions')]);
+        $quiz = $quiz->fresh('questions');
+        if (! $wasPublished && $quiz->status === 'published') {
+            $notifications->notifyQuizPublished($quiz, $request->user()->id);
+        }
+
+        return response()->json(['success' => true, 'data' => $quiz]);
     }
 
     public function destroy(int $id)

@@ -122,6 +122,10 @@ class SubscriptionController extends Controller
                 'admob_interstitial_id' => AppSetting::getValue('admob_interstitial_id', 'ca-app-pub-3940256099942544/1033173712'),
                 'min_app_version' => AppSetting::getValue('min_app_version', '1.0.0'),
                 'force_update' => AppSetting::getValue('force_update', '0') === '1',
+                'exams' => collect(config('exams.options', []))
+                    ->map(fn ($label, $key) => ['key' => $key, 'label' => $label])
+                    ->values()
+                    ->all(),
             ],
         ]);
     }

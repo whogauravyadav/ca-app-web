@@ -1,7 +1,18 @@
 import { useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
-import { Alert, Box, Button, Card, CardContent, TextField, Typography } from '@mui/material'
+import { Alert, Box, Button, Card, CardContent, TextField, Typography, keyframes } from '@mui/material'
 import { useAuth } from '../auth/AuthContext'
+
+const float = keyframes`
+  0% { transform: translateY(0px) scale(1); }
+  50% { transform: translateY(-18px) scale(1.04); }
+  100% { transform: translateY(0px) scale(1); }
+`
+
+const fadeUp = keyframes`
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+`
 
 export default function LoginPage() {
   const { login, isAuthenticated } = useAuth()
@@ -33,13 +44,51 @@ export default function LoginPage() {
         minHeight: '100vh',
         display: 'grid',
         placeItems: 'center',
-        background: 'linear-gradient(145deg, #1a237e 0%, #3949ab 45%, #5c6bc0 100%)',
+        position: 'relative',
+        overflow: 'hidden',
+        background: 'linear-gradient(145deg, #6b86f0 0%, #92a8fe 45%, #c5d2ff 100%)',
         p: 2,
       }}
     >
-      <Card sx={{ width: '100%', maxWidth: 420, borderRadius: 3, boxShadow: 8 }}>
+      <Box
+        sx={{
+          position: 'absolute',
+          width: 280,
+          height: 280,
+          borderRadius: '50%',
+          bgcolor: 'rgba(255,255,255,0.18)',
+          top: -60,
+          right: -40,
+          animation: `${float} 8s ease-in-out infinite`,
+        }}
+      />
+      <Box
+        sx={{
+          position: 'absolute',
+          width: 180,
+          height: 180,
+          borderRadius: '50%',
+          bgcolor: 'rgba(255,255,255,0.12)',
+          bottom: 40,
+          left: -30,
+          animation: `${float} 10s ease-in-out infinite reverse`,
+        }}
+      />
+      <Card
+        sx={{
+          width: '100%',
+          maxWidth: 420,
+          borderRadius: 4,
+          boxShadow: '0 24px 60px rgba(26,35,64,0.18)',
+          animation: `${fadeUp} 0.55s ease-out`,
+          backdropFilter: 'blur(8px)',
+        }}
+      >
         <CardContent sx={{ p: 4 }}>
-          <Typography variant="h5" fontWeight={800} gutterBottom>
+          <Typography variant="overline" sx={{ color: '#6b86f0', fontWeight: 700, letterSpacing: 1.2 }}>
+            Current Affairs
+          </Typography>
+          <Typography variant="h5" fontWeight={800} gutterBottom sx={{ color: '#1a2340' }}>
             Admin Login
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
@@ -60,7 +109,7 @@ export default function LoginPage() {
               required
               fullWidth
             />
-            <Button type="submit" variant="contained" size="large" disabled={loading} sx={{ bgcolor: '#3949ab' }}>
+            <Button type="submit" variant="contained" size="large" disabled={loading}>
               {loading ? 'Signing in…' : 'Sign in'}
             </Button>
           </Box>

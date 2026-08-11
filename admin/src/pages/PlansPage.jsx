@@ -60,7 +60,7 @@ export default function PlansPage() {
         <Typography variant="h5" fontWeight={800}>
           Subscription plans
         </Typography>
-        <Button variant="contained" sx={{ bgcolor: '#3949ab' }} onClick={() => setOpen(true)}>
+        <Button variant="contained" sx={{ bgcolor: '#92a8fe' }} onClick={() => setOpen(true)}>
           Add plan
         </Button>
       </Stack>

@@ -20,7 +20,7 @@ import DeleteIcon from '@mui/icons-material/Delete'
 import EditIcon from '@mui/icons-material/Edit'
 import api from '../api/client'
 
-const empty = { name: '', slug: '', icon: '', color: '#3949AB', sort_order: 0 }
+const empty = { name: '', slug: '', icon: '', color: '#92A8FE', sort_order: 0 }
 
 export default function CategoriesPage() {
   const [rows, setRows] = useState([])
@@ -56,7 +56,7 @@ export default function CategoriesPage() {
         </Typography>
         <Button
           variant="contained"
-          sx={{ bgcolor: '#3949ab' }}
+          sx={{ bgcolor: '#92a8fe' }}
           onClick={() => {
             setEditId(null)
             setForm(empty)
@@ -92,7 +92,7 @@ export default function CategoriesPage() {
                   size="small"
                   onClick={() => {
                     setEditId(r.id)
-                    setForm({ name: r.name, slug: r.slug, icon: r.icon || '', color: r.color || '#3949AB', sort_order: r.sort_order })
+                    setForm({ name: r.name, slug: r.slug, icon: r.icon || '', color: r.color || '#92A8FE', sort_order: r.sort_order })
                     setOpen(true)
                   }}
                 >

@@ -17,6 +17,8 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'phone',
+        'exams',
         'password',
         'role',
         'subscription_status',
@@ -39,6 +41,7 @@ class User extends Authenticatable
             'password' => 'hashed',
             'subscription_expires_at' => 'datetime',
             'last_active_date' => 'date',
+            'exams' => 'array',
         ];
     }
 
@@ -71,10 +74,20 @@ class User extends Authenticatable
 
     public function toApiArray(): array
     {
+        $examKeys = array_values(array_filter($this->exams ?? []));
+        $labels = config('exams.options', []);
+        $examLabels = array_map(
+            fn ($key) => $labels[$key] ?? $key,
+            $examKeys
+        );
+
         return [
             'id' => $this->id,
             'name' => $this->name,
             'email' => $this->email,
+            'phone' => $this->phone,
+            'exams' => $examKeys,
+            'exam_labels' => array_values($examLabels),
             'role' => $this->role,
             'subscription_status' => $this->isAdFree() ? 'active' : ($this->subscription_status === 'expired' ? 'expired' : 'free'),
             'subscription_expires_at' => $this->subscription_expires_at?->toIso8601String(),

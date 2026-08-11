@@ -108,7 +108,7 @@ export default function ArticlesPage() {
         </Typography>
         <Button
           variant="contained"
-          sx={{ bgcolor: '#3949ab' }}
+          sx={{ bgcolor: '#92a8fe' }}
           onClick={() => {
             setEditId(null)
             setForm({ ...empty, category_id: categories[0]?.id || '' })

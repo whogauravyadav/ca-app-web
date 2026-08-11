@@ -8,18 +8,37 @@ import DashboardPage from './pages/DashboardPage'
 import CategoriesPage from './pages/CategoriesPage'
 import ArticlesPage from './pages/ArticlesPage'
 import QuizzesPage from './pages/QuizzesPage'
+import NotificationsPage from './pages/NotificationsPage'
 import PlansPage from './pages/PlansPage'
 import SubscribersPage from './pages/SubscribersPage'
 
 const theme = createTheme({
   palette: {
-    primary: { main: '#3949ab' },
+    primary: {
+      main: '#92a8fe',
+      dark: '#6b86f0',
+      contrastText: '#1a2340',
+    },
     secondary: { main: '#ffb300' },
+    background: { default: '#f4f7ff' },
   },
   typography: {
     fontFamily: '"Inter", "Segoe UI", Roboto, sans-serif',
   },
-  shape: { borderRadius: 10 },
+  shape: { borderRadius: 12 },
+  components: {
+    MuiButton: {
+      styleOverrides: {
+        containedPrimary: {
+          backgroundColor: '#92a8fe',
+          color: '#1a2340',
+          fontWeight: 700,
+          boxShadow: 'none',
+          '&:hover': { backgroundColor: '#6b86f0', color: '#fff', boxShadow: 'none' },
+        },
+      },
+    },
+  },
 })
 
 const queryClient = new QueryClient()
@@ -50,6 +69,7 @@ export default function App() {
                 <Route path="categories" element={<CategoriesPage />} />
                 <Route path="articles" element={<ArticlesPage />} />
                 <Route path="quizzes" element={<QuizzesPage />} />
+                <Route path="notifications" element={<NotificationsPage />} />
                 <Route path="plans" element={<PlansPage />} />
                 <Route path="subscribers" element={<SubscribersPage />} />
               </Route>

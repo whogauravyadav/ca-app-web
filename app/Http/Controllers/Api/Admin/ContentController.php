@@ -10,6 +10,7 @@ use App\Models\QuizAttempt;
 use App\Models\Subscription;
 use App\Models\User;
 use App\Services\KtatvaStorageService;
+use App\Services\NotificationDispatcher;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -103,15 +104,20 @@ class ContentController extends Controller
         ]);
     }
 
-    public function storeArticle(Request $request)
+    public function storeArticle(Request $request, NotificationDispatcher $notifications)
     {
         $data = $this->validateArticle($request);
         $data['author_id'] = $request->user()->id;
         $data['slug'] = $data['slug'] ?? Str::slug($data['title']).'-'.Str::random(4);
-        if (($data['status'] ?? 'draft') === 'published' && empty($data['published_at'])) {
+        $wasPublished = ($data['status'] ?? 'draft') === 'published';
+        if ($wasPublished && empty($data['published_at'])) {
             $data['published_at'] = now();
         }
         $article = Article::create($data);
+
+        if ($wasPublished) {
+            $notifications->notifyArticlePublished($article, $request->user()->id);
+        }
 
         return response()->json([
             'success' => true,
@@ -119,18 +125,24 @@ class ContentController extends Controller
         ], 201);
     }
 
-    public function updateArticle(Request $request, int $id)
+    public function updateArticle(Request $request, int $id, NotificationDispatcher $notifications)
     {
         $article = Article::findOrFail($id);
+        $wasPublished = $article->status === 'published';
         $data = $this->validateArticle($request, true);
         if (($data['status'] ?? null) === 'published' && ! $article->published_at && empty($data['published_at'])) {
             $data['published_at'] = now();
         }
         $article->update($data);
+        $article = $article->fresh('category');
+
+        if (! $wasPublished && $article->status === 'published') {
+            $notifications->notifyArticlePublished($article, $request->user()->id);
+        }
 
         return response()->json([
             'success' => true,
-            'data' => $this->presentArticle($article->fresh('category')),
+            'data' => $this->presentArticle($article),
         ]);
     }
 
@@ -141,15 +153,20 @@ class ContentController extends Controller
         return response()->json(['success' => true]);
     }
 
-    public function publishArticle(int $id)
+    public function publishArticle(int $id, NotificationDispatcher $notifications, Request $request)
     {
         $article = Article::findOrFail($id);
+        $wasPublished = $article->status === 'published';
         $article->update([
             'status' => 'published',
             'published_at' => $article->published_at ?? now(),
         ]);
 
-        return response()->json(['success' => true, 'data' => $article]);
+        if (! $wasPublished) {
+            $notifications->notifyArticlePublished($article->fresh(), $request->user()->id);
+        }
+
+        return response()->json(['success' => true, 'data' => $article->fresh()]);
     }
 
     public function uploadImage(Request $request, KtatvaStorageService $storage)
