@@ -3,8 +3,8 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
-  // Production is served under Apache Alias /admin
-  base: process.env.VITE_BASE || '/admin/',
+  // Served at site root (http://host:8701/)
+  base: process.env.VITE_BASE || '/',
   server: {
     host: '127.0.0.1',
     port: 4401,

@@ -6,7 +6,7 @@ WORKDIR /admin
 COPY admin/package.json admin/package-lock.json ./
 RUN npm ci
 COPY admin/ ./
-ENV VITE_BASE=/admin/
+ENV VITE_BASE=/
 RUN npm run build
 
 # --- PHP / Apache app ---
@@ -40,12 +40,8 @@ COPY . .
 RUN composer install --no-interaction --prefer-dist --no-dev --optimize-autoloader \
     && rm -rf admin/node_modules admin/src admin/public admin/index.html admin/vite.config.js admin/eslint.config.js || true
 
-# Ship admin SPA under /admin (assets use base /admin/)
-COPY --from=admin-build /admin/dist /var/www/html/public/admin
-RUN npm_config_yes=true true \
-    && if [ -f /var/www/html/public/admin/index.html ]; then \
-         sed -i 's|href="/vite.svg"|href="/admin/vite.svg"|g' /var/www/html/public/admin/index.html || true; \
-       fi
+# Ship React admin at site root (keeps Laravel public/index.php for /api + /up)
+COPY --from=admin-build /admin/dist/ /var/www/html/public/
 
 COPY docker/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh \

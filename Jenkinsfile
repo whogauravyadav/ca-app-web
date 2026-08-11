@@ -117,7 +117,8 @@ pipeline {
             sleep 3
           done
           curl -fsS http://127.0.0.1:${APP_PORT}/up >/dev/null
-          curl -fsS -o /dev/null -w "%{http_code}\\n" http://127.0.0.1:${APP_PORT}/admin/ || true
+          curl -fsS -o /dev/null -w "%{http_code}\\n" http://127.0.0.1:${APP_PORT}/ || true
+          curl -fsS -o /dev/null -w "%{http_code}\\n" http://127.0.0.1:${APP_PORT}/login || true
         '''
       }
     }
