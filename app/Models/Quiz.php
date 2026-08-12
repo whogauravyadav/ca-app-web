@@ -11,6 +11,7 @@ class Quiz extends Model
     protected $fillable = [
         'title', 'description', 'category_id', 'article_id',
         'time_limit_sec', 'status', 'published_at',
+        'source', 'source_url', 'quiz_kind',
     ];
 
     protected function casts(): array

@@ -36,6 +36,8 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
+        $this->call(Outsource1CategorySeeder::class);
+
         $categories = [
             ['name' => 'Polity', 'slug' => 'polity', 'icon' => 'gavel', 'color' => '#3949AB', 'sort_order' => 1],
             ['name' => 'Economy', 'slug' => 'economy', 'icon' => 'trending_up', 'color' => '#00897B', 'sort_order' => 2],

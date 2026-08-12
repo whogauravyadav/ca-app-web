@@ -11,6 +11,7 @@ import QuizzesPage from './pages/QuizzesPage'
 import NotificationsPage from './pages/NotificationsPage'
 import PlansPage from './pages/PlansPage'
 import SubscribersPage from './pages/SubscribersPage'
+import FetchPage from './pages/FetchPage'
 
 const theme = createTheme({
   palette: {
@@ -72,6 +73,7 @@ export default function App() {
                 <Route path="notifications" element={<NotificationsPage />} />
                 <Route path="plans" element={<PlansPage />} />
                 <Route path="subscribers" element={<SubscribersPage />} />
+                <Route path="fetch" element={<FetchPage />} />
               </Route>
             </Routes>
           </BrowserRouter>

@@ -63,6 +63,47 @@ class KtatvaStorageService
     }
 
     /**
+     * Download a remote image and upload it to Ktatva. Returns the same shape as upload().
+     */
+    public function uploadFromUrl(string $url, string $folder = 'articles'): array
+    {
+        $response = Http::withHeaders([
+            'User-Agent' => config('outsource_1.user_agent', 'Mozilla/5.0'),
+            'Accept' => 'image/*,*/*',
+        ])->timeout(45)->get($url);
+
+        if (! $response->successful() || $response->body() === '') {
+            throw new RuntimeException('Failed to download image (HTTP '.$response->status().')');
+        }
+
+        $mime = strtolower((string) $response->header('Content-Type'));
+        $ext = match (true) {
+            str_contains($mime, 'png') => 'png',
+            str_contains($mime, 'webp') => 'webp',
+            str_contains($mime, 'gif') => 'gif',
+            str_contains($mime, 'jpeg'), str_contains($mime, 'jpg') => 'jpg',
+            default => pathinfo(parse_url($url, PHP_URL_PATH) ?: '', PATHINFO_EXTENSION) ?: 'jpg',
+        };
+        $ext = strtolower(preg_replace('/[^a-z0-9]/', '', $ext) ?: 'jpg');
+
+        $tmpPath = tempnam(sys_get_temp_dir(), 'ktimg_');
+        if ($tmpPath === false) {
+            throw new RuntimeException('Could not create temp file for image upload');
+        }
+        $named = $tmpPath.'.'.$ext;
+        rename($tmpPath, $named);
+        file_put_contents($named, $response->body());
+
+        $file = new UploadedFile($named, 'featured.'.$ext, $mime ?: 'image/jpeg', null, true);
+
+        try {
+            return $this->upload($file, null, $folder);
+        } finally {
+            @unlink($named);
+        }
+    }
+
+    /**
      * Get a (often signed) download URL for an object key.
      */
     public function downloadUrl(string $objectKey, bool $useCache = true): string

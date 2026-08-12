@@ -13,6 +13,7 @@ class Article extends Model
     protected $fillable = [
         'title', 'slug', 'summary', 'body', 'category_id', 'author_id',
         'featured_image', 'read_time_min', 'status', 'published_at', 'is_premium_early',
+        'source', 'source_url',
     ];
 
     protected function casts(): array

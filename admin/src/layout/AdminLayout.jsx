@@ -18,6 +18,7 @@ import QuizIcon from '@mui/icons-material/Quiz'
 import CardMembershipIcon from '@mui/icons-material/CardMembership'
 import PeopleIcon from '@mui/icons-material/People'
 import NotificationsIcon from '@mui/icons-material/Notifications'
+import CloudDownloadIcon from '@mui/icons-material/CloudDownload'
 import { useAuth } from '../auth/AuthContext'
 
 const width = 240
@@ -27,6 +28,7 @@ const links = [
   { to: '/categories', label: 'Categories', icon: <CategoryIcon /> },
   { to: '/articles', label: 'Articles', icon: <ArticleIcon /> },
   { to: '/quizzes', label: 'Quizzes', icon: <QuizIcon /> },
+  { to: '/fetch', label: 'Fetch content', icon: <CloudDownloadIcon /> },
   { to: '/notifications', label: 'Notifications', icon: <NotificationsIcon /> },
   { to: '/plans', label: 'Plans', icon: <CardMembershipIcon /> },
   { to: '/subscribers', label: 'Subscribers', icon: <PeopleIcon /> },

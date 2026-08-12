@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\Admin\AuthController as AdminAuthController;
 use App\Http\Controllers\Api\Admin\ContentController;
 use App\Http\Controllers\Api\Admin\QuizAdminController;
 use App\Http\Controllers\Api\Admin\NotificationAdminController;
+use App\Http\Controllers\Api\Admin\Outsource1FetchController;
 use App\Http\Controllers\Api\Admin\SubscriptionAdminController;
 use App\Http\Controllers\Api\Mobile\ArticleController;
 use App\Http\Controllers\Api\Mobile\AuthController as MobileAuthController;
@@ -102,5 +103,8 @@ Route::prefix('admin')->group(function () {
         Route::get('/notifications/settings', [NotificationAdminController::class, 'settings']);
         Route::put('/notifications/settings', [NotificationAdminController::class, 'updateSettings']);
         Route::post('/notifications/send', [NotificationAdminController::class, 'send']);
+
+        Route::post('/fetch/outsource-1', [Outsource1FetchController::class, 'fetch']);
+        Route::get('/fetch/outsource-1/logs', [Outsource1FetchController::class, 'logs']);
     });
 });
