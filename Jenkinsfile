@@ -61,7 +61,39 @@ pipeline {
       steps {
         sh '''
           set -eux
-          docker build --pull -t ${IMAGE_NAME}:latest "${WORKSPACE}"
+          export DOCKER_CLIENT_TIMEOUT=300
+
+          pull_retry() {
+            img="$1"
+            n=1
+            while [ "$n" -le 4 ]; do
+              if docker pull "$img"; then
+                return 0
+              fi
+              echo "WARN: docker pull $img failed (attempt $n)"
+              sleep $((n * 8))
+              n=$((n + 1))
+            done
+            echo "WARN: using local cache for $img (registry unreachable)"
+            docker image inspect "$img" >/dev/null
+          }
+
+          pull_retry alpine:3.20
+          pull_retry node:20-alpine
+          pull_retry php:8.3-apache
+          pull_retry composer:2
+
+          # Never use --pull: a Hub timeout must not fail the build when bases are cached.
+          n=1
+          while [ "$n" -le 3 ]; do
+            if docker build -t ${IMAGE_NAME}:latest "${WORKSPACE}"; then
+              exit 0
+            fi
+            echo "WARN: docker build failed (attempt $n)"
+            sleep $((n * 10))
+            n=$((n + 1))
+          done
+          exit 1
         '''
       }
     }
