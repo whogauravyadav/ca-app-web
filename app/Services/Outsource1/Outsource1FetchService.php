@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Services\KtatvaStorageService;
 use App\Services\NotificationDispatcher;
 use Carbon\Carbon;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -127,6 +128,19 @@ class Outsource1FetchService
         $max = (int) config('outsource_1.max_articles', 40);
         $pages = (int) config('outsource_1.max_article_pages', 8);
         $urls = $this->client->listArticleUrls($pages);
+        if ($urls === []) {
+            $home = $this->client->absoluteUrl('/');
+            $probe = $this->client->fetchWithStatus('/');
+            $failed = 1;
+            $errors[] = [
+                'url' => $home,
+                'reason' => $probe['body'] === null
+                    ? 'Could not reach Outsource 1 (HTTP '.$probe['status'].'). This network cannot connect to the source CDN; retry after the connectivity fix.'
+                    : 'Reached Outsource 1 but found no article links on the listing pages.',
+            ];
+
+            return compact('created', 'skipped', 'failed', 'errors');
+        }
         $processed = 0;
         $oldStreak = 0;
 
@@ -196,8 +210,22 @@ class Outsource1FetchService
         $imageKey = null;
         if (! empty($parsed['image_url']) && $this->storage->configured()) {
             try {
-                $uploaded = $this->storage->uploadFromUrl($parsed['image_url'], config('ktatva.prefix', 'articles'));
-                $imageKey = $uploaded['object_key'] ?? null;
+                $bytes = $this->client->download($parsed['image_url']);
+                if (is_string($bytes) && $bytes !== '') {
+                    $ext = strtolower(pathinfo(parse_url($parsed['image_url'], PHP_URL_PATH) ?: '', PATHINFO_EXTENSION) ?: 'jpg');
+                    $ext = preg_replace('/[^a-z0-9]/', '', $ext) ?: 'jpg';
+                    $tmp = tempnam(sys_get_temp_dir(), 'o1img_');
+                    $named = $tmp.'.'.$ext;
+                    rename($tmp, $named);
+                    file_put_contents($named, $bytes);
+                    $file = new UploadedFile($named, 'featured.'.$ext, null, null, true);
+                    try {
+                        $uploaded = $this->storage->upload($file, null, config('ktatva.prefix', 'articles'));
+                        $imageKey = $uploaded['object_key'] ?? null;
+                    } finally {
+                        @unlink($named);
+                    }
+                }
             } catch (\Throwable $e) {
                 Log::warning('Outsource1 image ingest failed', [
                     'url' => $parsed['source_url'],

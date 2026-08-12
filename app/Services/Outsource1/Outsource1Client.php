@@ -3,6 +3,7 @@
 namespace App\Services\Outsource1;
 
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -30,27 +31,30 @@ class Outsource1Client
     public function fetchWithStatus(string $pathOrUrl): array
     {
         $url = $this->absoluteUrl($pathOrUrl);
-        $timeout = (int) config('outsource_1.timeout', 25);
+        $last = ['status' => 0, 'body' => null];
 
-        try {
-            $response = Http::withHeaders([
-                'User-Agent' => config('outsource_1.user_agent'),
-                'Accept' => 'text/html,application/xhtml+xml',
-            ])->timeout($timeout)->get($url);
+        foreach ($this->connectIps() as $ip) {
+            $last = $this->request($url, $ip);
+            if (is_string($last['body']) && $last['body'] !== '') {
+                if (is_string($ip) && $ip !== '') {
+                    Cache::put('outsource1.connect_ip', $ip, now()->addHours(6));
+                }
 
-            $status = $response->status();
-            if (! $response->successful()) {
-                Log::info('Outsource1 fetch non-success', ['url' => $url, 'status' => $status]);
-
-                return ['status' => $status, 'body' => null];
+                return $last;
             }
-
-            return ['status' => $status, 'body' => $response->body()];
-        } catch (\Throwable $e) {
-            Log::warning('Outsource1 fetch failed', ['url' => $url, 'error' => $e->getMessage()]);
-
-            return ['status' => 0, 'body' => null];
+            if (in_array($last['status'], [401, 404, 410, 429, 500, 502, 503], true)) {
+                return $last;
+            }
         }
+
+        return $last;
+    }
+
+    public function download(string $url): ?string
+    {
+        $got = $this->fetchWithStatus($url);
+
+        return $got['body'];
     }
 
     /**
@@ -241,6 +245,112 @@ class Outsource1Client
     }
 
     /**
+     * @return list<?string>
+     */
+    private function connectIps(): array
+    {
+        $ips = [];
+        $pinned = trim((string) config('outsource_1.connect_ip', ''));
+        if ($pinned !== '') {
+            $ips[] = $pinned;
+        }
+        $cached = Cache::get('outsource1.connect_ip');
+        if (is_string($cached) && $cached !== '') {
+            $ips[] = $cached;
+        }
+        foreach ($this->discoverEdgeIps() as $ip) {
+            $ips[] = $ip;
+        }
+        $ips[] = null;
+
+        $out = [];
+        foreach ($ips as $ip) {
+            $key = $ip ?? '';
+            if (! array_key_exists($key, $out)) {
+                $out[$key] = $ip;
+            }
+        }
+
+        return array_values($out);
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function discoverEdgeIps(): array
+    {
+        $ips = [
+            '162.159.137.232',
+            '162.159.138.232',
+            '162.159.136.232',
+            '162.159.128.233',
+        ];
+        foreach ((array) config('outsource_1.edge_probe_hosts', []) as $host) {
+            $records = @dns_get_record((string) $host, DNS_A) ?: [];
+            foreach ($records as $row) {
+                if (! empty($row['ip']) && filter_var($row['ip'], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+                    $ips[] = $row['ip'];
+                }
+            }
+        }
+
+        return array_values(array_unique($ips));
+    }
+
+    /**
+     * @return array{status: int, body: ?string}
+     */
+    private function request(string $url, ?string $connectIp): array
+    {
+        $timeout = (int) config('outsource_1.timeout', 30);
+        $connectTimeout = (int) config('outsource_1.connect_timeout', 8);
+        $host = parse_url($this->baseUrl(), PHP_URL_HOST) ?: parse_url($url, PHP_URL_HOST);
+        $curl = [
+            CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4,
+        ];
+        if ($connectIp && $host) {
+            $curl[CURLOPT_RESOLVE] = [
+                $host.':443:'.$connectIp,
+                $host.':80:'.$connectIp,
+            ];
+        }
+
+        try {
+            $response = Http::withHeaders([
+                'User-Agent' => config('outsource_1.user_agent'),
+                'Accept' => 'text/html,application/xhtml+xml,image/*,*/*;q=0.8',
+                'Accept-Language' => 'en-US,en;q=0.9',
+            ])->withOptions([
+                'connect_timeout' => $connectTimeout,
+                'timeout' => $timeout,
+                'force_ip_resolve' => 'v4',
+                'curl' => $curl,
+            ])->get($url);
+
+            $status = $response->status();
+            if (! $response->successful()) {
+                Log::info('Outsource1 fetch non-success', [
+                    'url' => $url,
+                    'status' => $status,
+                    'connect_ip' => $connectIp,
+                ]);
+
+                return ['status' => $status, 'body' => null];
+            }
+
+            return ['status' => $status, 'body' => $response->body()];
+        } catch (\Throwable $e) {
+            Log::warning('Outsource1 fetch failed', [
+                'url' => $url,
+                'connect_ip' => $connectIp,
+                'error' => $e->getMessage(),
+            ]);
+
+            return ['status' => 0, 'body' => null];
+        }
+    }
+
+    /**
      * @return list<string>
      */
     private function extractArticleUrls(string $html): array
@@ -304,16 +414,19 @@ class Outsource1Client
             '/wp-content', '/wp-json', '/wp-login', '/cart', '/shop',
             '/gk-current-affairs-quiz', '/current-affairs-quiz',
             '/daily-current-affairs-quiz', '/about', '/contact', '/privacy',
-            '/terms', '/login', '/register',
+            '/terms', '/login', '/register', '/my-account', '/hindi',
+            '/cdn-cgi', '/gk-questions',
         ];
         foreach ($skip as $prefix) {
             if (Str::startsWith($path, $prefix)) {
                 return false;
             }
         }
+        if (in_array($path, ['/current-affairs', '/current-affairs/'], true)) {
+            return false;
+        }
 
-        // Single-segment slug: /some-article-slug
-        return (bool) preg_match('#^/[a-z0-9][a-z0-9-]+/?$#i', $path);
+        return (bool) preg_match('#^/[a-z0-9][a-z0-9%\-]+/?$#i', $path);
     }
 
     private function dateFromDailyQuizUrl(string $url): ?Carbon

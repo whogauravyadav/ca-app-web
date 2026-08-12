@@ -2,12 +2,23 @@
 
 return [
     'base_url' => rtrim(env('OUTSOURCE_1_BASE_URL', ''), '/'),
-    'timeout' => (int) env('OUTSOURCE_1_TIMEOUT', 25),
+    'timeout' => (int) env('OUTSOURCE_1_TIMEOUT', 30),
+    'connect_timeout' => (int) env('OUTSOURCE_1_CONNECT_TIMEOUT', 8),
     'max_article_pages' => (int) env('OUTSOURCE_1_MAX_ARTICLE_PAGES', 8),
     'max_articles' => (int) env('OUTSOURCE_1_MAX_ARTICLES', 40),
     'max_daily_quizzes' => (int) env('OUTSOURCE_1_MAX_DAILY_QUIZZES', 20),
     'max_quiz_pages' => (int) env('OUTSOURCE_1_MAX_QUIZ_PAGES', 3),
-    'user_agent' => 'Mozilla/5.0 (compatible; CurrentAffairsBot/1.0)',
+    'user_agent' => env(
+        'OUTSOURCE_1_USER_AGENT',
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    ),
+    // Optional IPv4 pin when the origin anycast IPs are unreachable from this network.
+    'connect_ip' => env('OUTSOURCE_1_CONNECT_IP', ''),
+    'edge_probe_hosts' => [
+        'cdnjs.cloudflare.com',
+        'discord.com',
+        'cloudflare.com',
+    ],
 
     'paths' => [
         'home' => '/',
